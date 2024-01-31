@@ -1,0 +1,39 @@
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true
+
+  App\Delivery\Driver\Event\UuidIdentifierDriverEventFactory: ~
+  App\Delivery\Driver\DriverEventFactory: '@App\Delivery\Driver\Event\UuidIdentifierDriverEventFactory'
+
+  App\Delivery\Trip\Event\UuidIdentifierDriverEventFactory: ~
+  App\Delivery\Trip\DriverEventFactory: '@App\Delivery\Trip\Event\UuidIdentifierDriverEventFactory'
+
+  App\Delivery\Driver\Event\Handler\UpdateTripWhenDriverReserved: ~
+
+  App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripInProgress:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+
+  App\Delivery\Driver\Event\Handler\MarkDriverAsFreeWhenTripDelivered:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+
+  delivery.driver.event.dispatcher:
+    class: App\Delivery\Shared\EventHandler\EventDispatcherImplementation
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Driver\Event\DriverReserved:
+          - '@App\Delivery\Trip\Event\Handler\MarkTripAsAssignedWhenDriverReserved'
+
+  delivery.trip.event.dispatcher:
+    class: App\Delivery\Shared\EventHandler\EventDispatcherImplementation
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Trip\Event\TripMarkedAsInProgress:
+          - '@App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripInProgress'
+        App\Delivery\Trip\Event\TripDelivered:
+          - '@App\Delivery\Driver\Event\Handler\MarkDriverAsFreeWhenTripDelivered'

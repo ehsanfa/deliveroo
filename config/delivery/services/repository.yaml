@@ -1,0 +1,23 @@
+services:
+    _defaults:
+      autowire: true
+
+    App\Delivery\Driver\Repository\DbalDriverRepository:
+      public: true
+      arguments:
+        $tableName: 'delivery_drivers'
+        $eventStoreTableName: 'delivery_driver_event_store'
+        $connection: '@doctrine.dbal.delivery_connection'
+    App\Delivery\Driver\DriverRepository: '@App\Delivery\Driver\Repository\DbalDriverRepository'
+
+    App\Delivery\Trip\Repository\DbalTripRepository:
+      public: true
+      arguments:
+        $tableName: 'delivery_trips'
+        $eventStoreTableName: 'delivery_trip_event_store'
+        $connection: '@doctrine.dbal.delivery_connection'
+
+    App\Delivery\Trip\PersistingTripRepository: '@App\Delivery\Trip\Repository\DbalTripRepository'
+    App\Delivery\Trip\ReadOnlyTripRepository: '@App\Delivery\Trip\Repository\DbalTripRepository'
+
+    App\Delivery\DriverRate\DriverRateRepository: '@App\Delivery\DriverRate\Repository\MockDriverRateRepository'

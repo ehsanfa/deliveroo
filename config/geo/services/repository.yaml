@@ -1,0 +1,12 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\Geo\DriverLocation\Repository\DbalDriverLocationRepository:
+    public: true
+    arguments:
+      $tableName: 'geo_driver_locations'
+      $connection: '@doctrine.dbal.connection_factory'
+
+  App\Geo\DriverLocation\PersistingDriverLocationRepository: '@App\Geo\DriverLocation\Repository\DbalDriverLocationRepository'

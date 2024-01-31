@@ -1,0 +1,23 @@
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true
+
+  delivery.driver.command.bus:
+    class: App\Delivery\Shared\Bus\CommandBus
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Driver\Command\CreateDriverCommand: '@App\Delivery\Driver\Command\CreateDriverHandler'
+        App\Delivery\Driver\Command\ScoutDriverCommand: '@App\Delivery\Driver\Command\ScoutDriverHandler'
+        App\Delivery\Driver\Command\MarkDriverBusyCommand: '@App\Delivery\Driver\Command\MarkDriverBusyHandler'
+        App\Delivery\Driver\Command\MarkDriverFreeCommand: '@App\Delivery\Driver\Command\MarkDriverFreeHandler'
+
+
+  delivery.trip.command.bus:
+    class: App\Delivery\Shared\Bus\CommandBus
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Trip\Command\CreateTripCommand: '@App\Delivery\Trip\Command\CreateTripHandler'

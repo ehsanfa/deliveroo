@@ -1,0 +1,12 @@
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true
+
+  geo.driver_location.command.bus:
+    class: App\Geo\Shared\Bus\CommandBus
+    public: true
+    arguments:
+      $handlers:
+        App\Geo\DriverLocation\Command\AddDriverLocationCommand: '@App\Geo\DriverLocation\Command\AddDriverLocationHandler'

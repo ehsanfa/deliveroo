@@ -1,0 +1,7 @@
+doctrine:
+    dbal:
+        connections:
+            delivery:
+                url: '%env(resolve:DELIVERY_DATABASE_URL)%'
+                server_version: 8
+                profiling_collect_backtrace: '%kernel.debug%'

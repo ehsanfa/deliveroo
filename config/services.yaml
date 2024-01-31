@@ -1,0 +1,14 @@
+imports:
+    - {resource: shared/}
+    - {resource: geo/}
+    - {resource: delivery/}
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'

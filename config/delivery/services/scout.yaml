@@ -1,0 +1,10 @@
+services:
+  _defaults:
+    autowire: true
+    public: true
+
+  delivery.scout.scorer.rookie:
+    class: App\Delivery\Driver\Scorer\RookieScorer
+
+  delivery.scout.scorer.rate:
+    class: App\Delivery\Driver\Scorer\RateScorer
