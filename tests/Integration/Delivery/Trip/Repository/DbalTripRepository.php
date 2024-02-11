@@ -13,25 +13,10 @@ use App\Shared\Type\Uuid;
 use App\Shared\Type\UuidGenerator;
 use App\Shared\Type\UuidValidator;
 use Doctrine\DBAL\Connection;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Test\Integration\Shared\TestWithCleanup;
 
-class DbalTripRepository extends KernelTestCase
+class DbalTripRepository extends TestWithCleanup
 {
-    private Connection $connection;
-
-    protected function setUp(): void
-    {
-        $this->connection = $this->getContainer()->get('doctrine.dbal.delivery_connection');
-        $this->connection->beginTransaction();
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->connection->rollBack();
-        parent::tearDown();
-    }
-
     public function testCreateTrip(): void
     {
         $uuidValidator = $this->getContainer()->get(UuidValidator::class);

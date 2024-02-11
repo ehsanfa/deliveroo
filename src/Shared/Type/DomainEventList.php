@@ -26,6 +26,11 @@ readonly class DomainEventList implements \IteratorAggregate
         return new DomainEventList($domainEvents);
     }
 
+    public function count(): int
+    {
+        return count($this->domainEvents);
+    }
+
     public function getIterator(): Traversable
     {
        return new \ArrayIterator($this->domainEvents);

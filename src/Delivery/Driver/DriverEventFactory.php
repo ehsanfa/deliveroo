@@ -10,9 +10,9 @@ use App\Delivery\Driver\Event\DriverReserved;
 
 interface DriverEventFactory
 {
-    public function createDriverAssignedEvent(mixed $driverId, mixed $tripId): DriverAssigned;
+    public function createDriverAssignedEvent(mixed $driverId, array $payload): DriverAssigned;
 
     public function createDriverCreatedEvent(mixed $driverId): DriverCreated;
 
-    public function createDriverReservedEvent(mixed $driverId, mixed $tripId): DriverReserved;
+    public function createDriverReservedEvent(mixed $driverId, array $payload): DriverReserved;
 }

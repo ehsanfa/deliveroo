@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Integration\Delivery\Trip\Command;
+namespace Test\Integration\Delivery\Trip\Command;
 
 use App\Delivery\Shared\Bus\CommandBus;
 use App\Delivery\Trip\Command\CreateTripCommand;
 use App\Delivery\Trip\Id;
 use App\Delivery\Trip\PersistingTripRepository;
 use App\Shared\Type\Location;
-use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Test\Integration\Shared\TestWithCleanup;
 use Test\Unit\Delivery\Driver\MockUuid;
 
-class CreateTripCommandTest extends KernelTestCase
+class CreateTripCommandTest extends TestWithCleanup
 {
     public function testCreateTrip(): void
     {

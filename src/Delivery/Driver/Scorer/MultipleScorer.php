@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Delivery\Driver\Scorer;
 
 use App\Delivery\Driver\Scorer;
-use App\Delivery\DriverRate\DriverList;
+use App\Delivery\Driver\DriverList;
 
 readonly class MultipleScorer implements Scorer
 {

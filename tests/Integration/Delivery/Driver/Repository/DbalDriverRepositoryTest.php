@@ -12,8 +12,9 @@ use App\Delivery\Driver\Status;
 use App\Shared\Type\Uuid;
 use App\Shared\Type\UuidGenerator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Test\Integration\Shared\TestWithCleanup;
 
-class DbalDriverRepositoryTest extends KernelTestCase
+class DbalDriverRepositoryTest extends TestWithCleanup
 {
     private readonly DriverRepository $driverRepository;
 

@@ -7,7 +7,7 @@ namespace App\Delivery\Driver\Command;
 use App\Delivery\Driver;
 use App\Shared\Type\Command;
 
-readonly class MarkDriverFreeCommand implements Command
+final readonly class MarkDriverFreeCommand implements Command
 {
     public function __construct(
         private Driver\Id $driverId,

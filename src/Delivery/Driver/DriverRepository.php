@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Delivery\Driver;
 
 use App\Delivery\Driver\Exception\DriverNotFoundException;
-use App\Delivery\DriverRate\DriverList;
+use App\Delivery\Driver\DriverList;
 use App\Shared\Distance\Distance;
 use App\Shared\Type\Location;
 

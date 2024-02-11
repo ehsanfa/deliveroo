@@ -4,6 +4,32 @@ services:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true
 
+  delivery.driver.query.bus:
+    class: App\Delivery\Shared\Bus\QueryBus
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Driver\Query\GetDriverQuery: '@App\Delivery\Driver\Query\GetDriverHandler'
+        App\Delivery\Driver\Query\GetFreeDriversAroundQuery: '@App\Delivery\Driver\Query\GetFreeDriversAroundHandler'
+
+  delivery.trip.query.bus:
+    class: App\Delivery\Shared\Bus\QueryBus
+    public: true
+    arguments:
+      $handlers:
+        App\Delivery\Trip\Query\GetTripQuery: '@App\Delivery\Trip\Query\GetTripHandler'
+
+  App\Delivery\Driver\Command\MarkDriverFreeHandler:
+    arguments:
+      $driverQueryBus: '@delivery.driver.query.bus'
+  App\Delivery\Driver\Command\MarkDriverBusyHandler:
+    arguments:
+      $driverQueryBus: '@delivery.driver.query.bus'
+  App\Delivery\Driver\Command\ScoutDriverHandler:
+    arguments:
+      $driverQueryBus: '@delivery.driver.query.bus'
+      $tripQueryBus: '@delivery.trip.query.bus'
+
   delivery.driver.command.bus:
     class: App\Delivery\Shared\Bus\CommandBus
     public: true
@@ -13,7 +39,7 @@ services:
         App\Delivery\Driver\Command\ScoutDriverCommand: '@App\Delivery\Driver\Command\ScoutDriverHandler'
         App\Delivery\Driver\Command\MarkDriverBusyCommand: '@App\Delivery\Driver\Command\MarkDriverBusyHandler'
         App\Delivery\Driver\Command\MarkDriverFreeCommand: '@App\Delivery\Driver\Command\MarkDriverFreeHandler'
-
+        App\Delivery\Driver\Command\UpdateDriverLocationCommand: '@App\Delivery\Driver\Command\UpdateDriverLocationHandler'
 
   delivery.trip.command.bus:
     class: App\Delivery\Shared\Bus\CommandBus

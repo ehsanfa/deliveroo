@@ -8,15 +8,27 @@ use App\Delivery\Driver\Scorer\MultipleScorer;
 use App\Delivery\Driver\Scorer\RateScorer;
 use App\Delivery\Driver\Scorer\RookieScorer;
 use App\Delivery\Driver\Status;
-use App\Delivery\DriverRate\DriverList;
+use App\Delivery\Driver\DriverList;
 use App\Delivery\DriverRate\DriverRate;
 use App\Delivery\DriverRate\DriverRateList;
 use App\Delivery\DriverRate\DriverRateRepository;
+use App\Delivery\Shared\Configuration\ConfigurationManager;
 use App\Delivery\Trip\ReadOnlyTripRepository;
 use PHPUnit\Framework\TestCase;
 
 class SortingTest extends TestCase
 {
+    private function getConfigManager(): ConfigurationManager
+    {
+        $configurationManager = $this->createMock(ConfigurationManager::class);
+        $configurationManager->method('scoutDriverRookieScoreWeight')
+            ->willReturn(100);
+        $configurationManager->method('scoutDriverRateScoreWeight')
+            ->willReturn(5);
+
+        return $configurationManager;
+    }
+
     public function testSortingByScore(): void
     {
         $driverA = Driver::create(
@@ -57,8 +69,8 @@ class SortingTest extends TestCase
             });
 
         $rateScoring = new RateScorer(
-            weight: 5,
-            driverRateRepository: $driverRateRepositoryMock
+            driverRateRepository: $driverRateRepositoryMock,
+            configurationManager: $this->getConfigManager(),
         );
 
         $sortedDrivers = $driverList->sortByScorer($rateScoring);
@@ -112,8 +124,8 @@ class SortingTest extends TestCase
             });
 
         $rookieScoring = new RookieScorer(
-            weight: 100,
-            tripRepository: $tripRateRepositoryMock
+            tripRepository: $tripRateRepositoryMock,
+            configurationManager: $this->getConfigManager(),
         );
 
         $sortedDrivers = $driverList->sortByScorer($rookieScoring);
@@ -167,8 +179,8 @@ class SortingTest extends TestCase
             });
 
         $rookieScorer = new RookieScorer(
-            weight: 100,
             tripRepository: $tripRateRepositoryMock,
+            configurationManager: $this->getConfigManager(),
         );
 
         $driverRateRepositoryMock = $this->createStub(DriverRateRepository::class);
@@ -191,8 +203,8 @@ class SortingTest extends TestCase
             });
 
         $rateScorer = new RateScorer(
-            weight: 5,
-            driverRateRepository: $driverRateRepositoryMock
+            driverRateRepository: $driverRateRepositoryMock,
+            configurationManager: $this->getConfigManager(),
         );
 
         $sortedDrivers = $driverList->sortByScorer(new MultipleScorer(

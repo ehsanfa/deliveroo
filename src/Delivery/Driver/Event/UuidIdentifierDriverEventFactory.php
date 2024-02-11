@@ -17,10 +17,10 @@ final readonly class UuidIdentifierDriverEventFactory implements DriverEventFact
     ) {
     }
 
-    public function createDriverAssignedEvent(mixed $driverId, mixed $tripId): DriverAssigned
+    public function createDriverAssignedEvent(mixed $driverId, array $payload): DriverAssigned
     {
         $driverId = new Driver\Id(Uuid::fromString($driverId, $this->uuidValidator));
-        $tripId = new Trip\Id(Uuid::fromString($tripId, $this->uuidValidator));
+        $tripId = new Trip\Id(Uuid::fromString($payload['trip_id'], $this->uuidValidator));
 
         return new DriverAssigned($driverId, $tripId);
     }
@@ -32,10 +32,10 @@ final readonly class UuidIdentifierDriverEventFactory implements DriverEventFact
         return new DriverCreated($driverId);
     }
 
-    public function createDriverReservedEvent(mixed $driverId, mixed $tripId): DriverReserved
+    public function createDriverReservedEvent(mixed $driverId, array $payload): DriverReserved
     {
         $driverId = new Driver\Id(Uuid::fromString($driverId, $this->uuidValidator));
-        $tripId = new Trip\Id(Uuid::fromString($tripId, $this->uuidValidator));
+        $tripId = new Trip\Id(Uuid::fromString($payload['trip_id'], $this->uuidValidator));
 
         return new DriverReserved($driverId, $tripId);
     }

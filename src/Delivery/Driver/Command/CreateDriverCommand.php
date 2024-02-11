@@ -7,7 +7,7 @@ namespace App\Delivery\Driver\Command;
 use App\Delivery\Driver\Id;
 use App\Shared\Type\Command;
 
-readonly class CreateDriverCommand implements Command
+final readonly class CreateDriverCommand implements Command
 {
     public function __construct(
         private Id $id,

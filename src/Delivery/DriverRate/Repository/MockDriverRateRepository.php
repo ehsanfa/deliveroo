@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Delivery\DriverRate\Repository;
 
-use App\Delivery\DriverRate\DriverList;
+use App\Delivery\Driver\DriverList;
 use App\Delivery\DriverRate\DriverRateList;
 use App\Delivery\DriverRate\DriverRateRepository;
 

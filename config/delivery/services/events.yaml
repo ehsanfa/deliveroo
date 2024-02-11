@@ -18,6 +18,7 @@ services:
 
   App\Delivery\Driver\Event\Handler\MarkDriverAsFreeWhenTripDelivered:
     arguments:
+      $tripQueryBus: '@delivery.trip.query.bus'
       $driverCommandBus: '@delivery.driver.command.bus'
 
   delivery.driver.event.dispatcher:

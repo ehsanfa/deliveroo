@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Delivery\DriverRate;
+namespace App\Delivery\Driver;
 
 use App\Delivery\Driver\Driver;
 use App\Delivery\Driver\Scorer;

@@ -8,7 +8,7 @@ use App\Delivery\Driver;
 use App\Delivery\Trip;
 use App\Shared\Type\Command;
 
-readonly class MarkDriverBusyCommand implements Command
+final readonly class MarkDriverBusyCommand implements Command
 {
     public function __construct(
         private Driver\Id $driverId,

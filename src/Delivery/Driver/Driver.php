@@ -9,7 +9,6 @@ use App\Delivery\Driver\Event\DriverCreated;
 use App\Delivery\Driver\Event\DriverReserved;
 use App\Delivery\Driver\Exception\DriverNotFreeException;
 use App\Delivery\Driver\Exception\DriverNotReserved;
-use App\Delivery\Shared\Exception\HydrationException;
 use App\Shared\Distance\Distance;
 use App\Shared\Distance\DistanceCalculator;
 use App\Delivery\Trip\ReadOnlyTripRepository;
@@ -19,10 +18,7 @@ use App\Shared\Type\Changeable;
 use App\Shared\Type\Changeset;
 use App\Shared\Type\ComparisonResult;
 use App\Shared\Type\DomainEvents;
-use App\Shared\Type\InvalidUuidException;
 use App\Shared\Type\Location;
-use App\Shared\Type\Uuid;
-use App\Shared\Type\UuidValidator;
 
 class Driver implements AggregateRoot
 {
@@ -82,17 +78,32 @@ class Driver implements AggregateRoot
         return $this->location;
     }
 
-    public function setLocation(Location $location): void
+    public function updateLocation(Location $location, \DateTimeImmutable $locationUpdateAt): void
     {
-        $oldValue = $this->location;
-        $this->location = $location;
+        $oldLocation = $this->getLocation();
+        $this->setLocation($location);
         $this->appendChangeset(
             new Changeset(
                 field: 'location',
-                old: $oldValue !== null ? json_encode($oldValue->toArray()) : null,
+                old: $oldLocation !== null ? json_encode($oldLocation->toArray()) : null,
                 new: json_encode($location->toArray()),
             )
         );
+
+        $oldLocationUpdatedAt = $this->getLastLocationUpdateAt();
+        $this->setLastLocationUpdateAt($locationUpdateAt);
+        $this->appendChangeset(
+            new Changeset(
+                field: 'location_updated_at',
+                old: $oldLocationUpdatedAt?->format('Y-m-d H:i:s'),
+                new: $this->getLastLocationUpdateAt()->format('Y-m-d H:i:s'),
+            )
+        );
+    }
+
+    private function setLocation(Location $location): void
+    {
+        $this->location = $location;
     }
 
     public function getLastLocationUpdateAt(): ?\DateTimeImmutable
@@ -100,17 +111,9 @@ class Driver implements AggregateRoot
         return $this->lastLocationUpdateAt?->setTimezone(new \DateTimeZone('UTC'));
     }
 
-    public function setLastLocationUpdateAt(\DateTimeImmutable $lastLocationUpdateAt): void
+    private function setLastLocationUpdateAt(\DateTimeImmutable $lastLocationUpdateAt): void
     {
-        $oldValue = $this->getLastLocationUpdateAt();
         $this->lastLocationUpdateAt = $lastLocationUpdateAt->setTimezone(new \DateTimeZone('UTC'));
-        $this->appendChangeset(
-            new Changeset(
-                field: 'location_updated_at',
-                old: $oldValue?->format('Y-m-d H:i:s'),
-                new: $this->getLastLocationUpdateAt()->format('Y-m-d H:i:s'),
-            )
-        );
     }
 
     private function changeStatusTo(Status $status): void
@@ -217,57 +220,6 @@ class Driver implements AggregateRoot
         );
 
         return $driverDistanceToTarget->compareTo($maxDistance) !== ComparisonResult::IsBiggerThan;
-    }
-
-    /**
-     * @throws InvalidUuidException
-     * @throws HydrationException
-     * @throws \Exception
-     */
-    public static function fromArray(
-        array $data,
-        UuidValidator $uuidValidator,
-    ): Driver {
-        self::validateHydration($data);
-
-        $driver = new self(
-            id: new Id(Uuid::fromString($data['id'], $uuidValidator)),
-            status: Status::from($data['status'])
-        );
-
-        if (isset($data['location_latitude'])
-            && isset($data['location_longitude'])
-        ) {
-            $driver->setLocation(new Location(
-                latitude: $data['location_latitude'],
-                longitude: $data['location_longitude'],
-            ));
-        }
-
-        if (isset($data['location_updated_at'])) {
-            $driver->setLastLocationUpdateAt(
-                new \DateTimeImmutable($data['location_updated_at']),
-            );
-        }
-
-        return $driver;
-    }
-
-    /**
-     * @throws HydrationException
-     */
-    private static function validateHydration(array $data): void
-    {
-        $fields = [
-            'id',
-            'status',
-        ];
-
-        foreach ($fields as $field) {
-            if (!isset($data[$field])) {
-                throw new HydrationException($field);
-            }
-        }
     }
 
     public static function fromData(

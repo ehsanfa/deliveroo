@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\Delivery\Driver\Command;
 
 use App\Delivery\Driver\Scorer;
-use App\Delivery\Trip\Trip;
+use App\Delivery\Trip;
 use App\Shared\Type\Command;
 
-readonly class ScoutDriverCommand implements Command
+final readonly class ScoutDriverCommand implements Command
 {
     public function __construct(
-        private Trip   $trip,
+        private Trip\Id   $tripId,
         private Scorer $scorer,
     ) {
     }
 
-    public function getTrip(): Trip
+    public function getTripId(): Trip\Id
     {
-        return $this->trip;
+        return $this->tripId;
     }
 
     public function getScorer(): Scorer

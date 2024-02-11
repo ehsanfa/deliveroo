@@ -8,7 +8,7 @@ use App\Delivery\Driver\Driver;
 use App\Delivery\Driver\DriverRepository;
 use App\Delivery\Driver\Status;
 
-readonly class CreateDriverHandler
+final readonly class CreateDriverHandler
 {
     public function __construct(
         private DriverRepository $persistingDriverRepository,

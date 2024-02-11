@@ -8,6 +8,11 @@ trait DomainEvents
 {
     private ?DomainEventList $domainEvents = null;
 
+    public function flushDomainEvents(): void
+    {
+        $this->domainEvents = new DomainEventList([]);
+    }
+
     public function getDomainEvents(): DomainEventList
     {
         return $this->domainEvents ?: new DomainEventList([]);

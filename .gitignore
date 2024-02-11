@@ -9,6 +9,7 @@
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
 
+todo.md
 .env
 vendor/
 composer.phar

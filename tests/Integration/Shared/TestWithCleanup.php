@@ -15,6 +15,7 @@ class TestWithCleanup extends KernelTestCase
     {
         parent::setUp();
         $this->connection = $this->getContainer()->get('doctrine.dbal.delivery_connection');
+        $this->connection->setNestTransactionsWithSavepoints(true);
         $this->connection->beginTransaction();
     }
 

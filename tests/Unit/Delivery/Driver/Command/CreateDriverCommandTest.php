@@ -6,8 +6,10 @@ namespace Test\Unit\Delivery\Driver\Command;
 
 use App\Delivery\Driver\Command\CreateDriverCommand;
 use App\Delivery\Driver\Command\CreateDriverHandler;
+use App\Delivery\Driver\Driver;
 use App\Delivery\Driver\Id;
 use App\Delivery\Driver\DriverRepository;
+use App\Delivery\Driver\Status;
 use PHPUnit\Framework\TestCase;
 use Test\Unit\Delivery\Driver\MockUuid;
 
@@ -21,14 +23,17 @@ class CreateDriverCommandTest extends TestCase
             ),
         );
 
-        $handler = new CreateDriverHandler(
-            $this->createMock(DriverRepository::class),
-        );
+        $driverRepository = $this->createMock(DriverRepository::class);
+        $driverRepository
+            ->expects(self::once())
+            ->method('create')
+            ->with(Driver::create(
+                id: $command->getId(),
+                status: Status::OnHold
+            ));
 
-        $driver = $handler->__invoke($command);
+        $handler = new CreateDriverHandler($driverRepository);
 
-        self::assertTrue(
-            $driver->isFresh(),
-        );
+        $handler->__invoke($command);
     }
 }

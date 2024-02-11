@@ -116,7 +116,10 @@ class DriverTest extends TestCase
             status: Status::Free
         );
 
-        $driver->setLocation(new Location(latitude: 35.234234, longitude: 54.2313));
+        $driver->updateLocation(
+            location: new Location(latitude: 35.234234, longitude: 54.2313),
+            locationUpdateAt: new \DateTimeImmutable(),
+        );
 
         $distanceCalculatorStub = $this->createStub(DistanceCalculator::class);
         $distanceCalculatorStub->method('calculate')

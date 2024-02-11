@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace App\Delivery\Driver\Scorer;
 
 use App\Delivery\Driver\Scorer;
-use App\Delivery\DriverRate\DriverList;
+use App\Delivery\Driver\DriverList;
 use App\Delivery\DriverRate\DriverRateRepository;
 use App\Delivery\Shared\Configuration\ConfigurationManager;
-use JetBrains\PhpStorm\Pure;
 
 readonly class RateScorer implements Scorer
 {
@@ -39,7 +38,6 @@ readonly class RateScorer implements Scorer
         return new DriverList($drivers);
     }
 
-    #[Pure]
     private function getFactor(float $highestRate, float $driverRate): float
     {
         return ($driverRate*$this->configurationManager->scoutDriverRateScoreWeight())/$highestRate;

@@ -6,15 +6,16 @@ namespace App\Delivery\Driver\Event\Handler;
 
 use App\Delivery\Driver\Command\MarkDriverFreeCommand;
 use App\Delivery\Driver\Exception\DriverNotFoundException;
+use App\Delivery\Shared\Bus\QueryBus;
 use App\Delivery\Trip\Event\TripDelivered;
-use App\Delivery\Trip\PersistingTripRepository;
+use App\Delivery\Trip\Query\GetTripQuery;
 use App\Shared\Type\CommandBus;
 use App\Shared\Type\HandlerNotFoundException;
 
 final readonly class MarkDriverAsFreeWhenTripDelivered
 {
     public function __construct(
-        private PersistingTripRepository $tripRepository,
+        protected QueryBus $tripQueryBus,
         private CommandBus $driverCommandBus,
     ) {
     }
@@ -25,7 +26,9 @@ final readonly class MarkDriverAsFreeWhenTripDelivered
      */
     public function handle(TripDelivered $domainEvent): void
     {
-        $trip = $this->tripRepository->find($domainEvent->getTripId());
+        $trip = $this->tripQueryBus->handle(
+            new GetTripQuery($domainEvent->getTripId()),
+        );
         if (null === $trip) {
             return;
         }

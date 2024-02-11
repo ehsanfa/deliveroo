@@ -63,15 +63,15 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
             VALUES (
                 :id,
                 :status,
-                ST_SRID(POINT(:source_lat, :source_lng), 4326),
-                ST_SRID(POINT(:destination_lat, :destination_lng), 4326)
+                ST_SRID(POINT(:source_lng, :source_lat), 4326),
+                ST_SRID(POINT(:destination_lng, :destination_lat), 4326)
             )
         ");
         $q->bindValue("id", $trip->getId()->toString());
         $q->bindValue("status", $trip->getStatus()->value);
         $q->bindValue("source_lat", $trip->getSource()->getLatitude());
         $q->bindValue("source_lng", $trip->getSource()->getLongitude());
-        $q->bindValue("destination_lat", $trip->getDestination()->getLongitude());
+        $q->bindValue("destination_lat", $trip->getDestination()->getLatitude());
         $q->bindValue("destination_lng", $trip->getDestination()->getLongitude());
         $q->executeQuery();
 
@@ -118,6 +118,7 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
                     'payload' => $payload !== null ? json_encode($payload) : null,
                 ]);
             }
+            $trip->flushDomainEvents();
 
             $this->connection->commit();
         } catch (\Exception $e) {

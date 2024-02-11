@@ -10,9 +10,10 @@ use App\Delivery\Driver\Id;
 use App\Delivery\Driver\Status;
 use App\Shared\Type\CommandBus;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Test\Integration\Shared\TestWithCleanup;
 use Test\Unit\Delivery\Driver\MockUuid;
 
-class CreateDriverCommandTest extends KernelTestCase
+class CreateDriverCommandTest extends TestWithCleanup
 {
     public function testCreateDriver(): void
     {

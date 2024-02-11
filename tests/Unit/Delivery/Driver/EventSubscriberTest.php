@@ -7,12 +7,11 @@ namespace Test\Unit\Delivery\Driver;
 use App\Delivery\Driver;
 use App\Delivery\Driver\Event\DriverAssigned;
 use App\Delivery\Driver\Event\DriverCreated;
-use App\Delivery\Driver\Event\Handler\UpdateTripWhenDriverReserved;
+use App\Delivery\Shared\EventStoreRepository;
 use App\Delivery\Trip;
 use App\Delivery\Shared\EventHandler\EventDispatcherImplementation;
 use App\Delivery\Trip\PersistingTripRepository;
 use App\Shared\Type\DomainEventList;
-use App\Shared\Type\EventStoreRepository;
 use App\Shared\Type\Location;
 use PHPUnit\Framework\TestCase;
 
