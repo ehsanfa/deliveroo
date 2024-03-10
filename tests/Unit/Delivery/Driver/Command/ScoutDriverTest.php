@@ -29,10 +29,6 @@ class ScoutDriverTest extends TestCase
 {
     public function testAddsDomainEventWhenSuccessfullyReserved(): void
     {
-        $driver1 = Driver::create(
-            id: new DriverId(MockUuid::fromString('driver-1')),
-            status: DriverStatus::Away,
-        );
         $driver2 = Driver::create(
             id: new DriverId(MockUuid::fromString('driver-2')),
             status: DriverStatus::Free,
@@ -59,7 +55,6 @@ class ScoutDriverTest extends TestCase
         $scorer = $this->createMock(Scorer::class);
         $scorer->method('score')
             ->willReturn(new DriverList([
-                $driver1,
                 $driver2,
             ]));
 
@@ -75,7 +70,6 @@ class ScoutDriverTest extends TestCase
         $driverQueryBus = $this->createStub(QueryBus::class);
         $driverQueryBus->method('handle')
             ->willReturn(new DriverList([
-                $driver1,
                 $driver2,
             ]));
         $tripQueryBus = $this->createStub(QueryBus::class);

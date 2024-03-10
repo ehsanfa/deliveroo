@@ -2,14 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Delivery\Driver\Port\Persistence\Repository;
+namespace App\Delivery\Shared\Port\Persistence\Repository;
 
-use App\Delivery\Driver;
-use App\Delivery\Driver\Event\DriverAssigned;
-use App\Delivery\Driver\Event\DriverCreated;
-use App\Delivery\Driver\Event\DriverReserved;
 use App\Delivery\Shared\DomainEventEntity;
 use App\Delivery\Shared\DomainEventEntityList;
+use App\Delivery\Shared\DomainEventFactory;
 use App\Delivery\Shared\DomainEventId;
 use App\Delivery\Shared\EventStoreRepository;
 use App\Delivery\Shared\Exception\DomainEventNotFoundException;
@@ -22,16 +19,21 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
 
-final readonly class DbalDriverEventStoreRepository implements EventStoreRepository
+final readonly class DbalEventStoreRepository implements EventStoreRepository
 {
     public function __construct(
         private string $tableName,
         private Connection $connection,
-        private Driver\DriverEventFactory $driverEventFactory,
+        private DomainEventFactory $domainEventFactory,
         private UuidValidator $uuidValidator,
     ) {
     }
 
+    /**
+     * @throws UndefinedDomainEventException
+     * @throws InvalidUuidException
+     * @throws Exception
+     */
     public function getEventsByIdentifier(string $identifier): DomainEventEntityList
     {
         $qb = $this->connection->createQueryBuilder();
@@ -49,7 +51,7 @@ final readonly class DbalDriverEventStoreRepository implements EventStoreReposit
                         string: $fetchedDomainEvent['id'],
                         validator: $this->uuidValidator,
                     )),
-                    $this->getDomainEvent($fetchedDomainEvent),
+                    $this->domainEventFactory->getDomainEvent($fetchedDomainEvent),
                 ),
             );
         }
@@ -75,21 +77,8 @@ final readonly class DbalDriverEventStoreRepository implements EventStoreReposit
     }
 
     /**
-     * @throws UndefinedDomainEventException
-     */
-    private function getDomainEvent(array $data): DomainEvent
-    {
-        $payload = isset($data['payload']) ? json_decode($data['payload'], true) : null;
-        return match ($data['event']) {
-            DriverReserved::class => $this->driverEventFactory->createDriverReservedEvent($data['driver_id'], $payload),
-            DriverAssigned::class => $this->driverEventFactory->createDriverAssignedEvent($data['driver_id'], $payload),
-            DriverCreated::class => $this->driverEventFactory->createDriverCreatedEvent($data['driver_id']),
-            default => throw new UndefinedDomainEventException(),
-        };
-    }
-
-    /**
      * @inheritDoc
+     * @throws UndefinedDomainEventException|Exception
      */
     public function getEventById(DomainEventId $id): DomainEvent
     {
@@ -105,26 +94,29 @@ final readonly class DbalDriverEventStoreRepository implements EventStoreReposit
             throw new DomainEventNotFoundException();
         }
 
-        return $this->getDomainEvent($domainEventArray);
+        return $this->domainEventFactory->getDomainEvent($domainEventArray);
     }
 
     /**
-     * @throws InvalidUuidException
-     * @throws Exception
-     * @inheritDoc
+     * @throws Exception|UndefinedDomainEventException
+     *
      */
-    public function getOldestEventIds(int $limit): \Traversable
+    public function getOldestEvents(int $limit): DomainEventEntityList
     {
         $qb = $this->connection->createQueryBuilder();
         $qb->from($this->tableName, 'es')
-            ->select('es.id')
-            ->orderBy('es.id', 'desc')
+            ->select('es.*')
+            ->orderBy('es.id', 'asc')
             ->setMaxResults($limit);
 
-        $domainEventIds = $qb->fetchAssociative();
-
-        foreach ($qb->fetchFirstColumn() as $domainEventId) {
-            yield new DomainEventId(Uuid::fromString($domainEventId, $this->uuidValidator));
+        $domainEventEntities = [];
+        foreach ($qb->fetchAllAssociative() as $domainEventEntityArray) {
+            $domainEventEntities[] = new DomainEventEntity(
+                new DomainEventId(Uuid::fromString($domainEventEntityArray['id'], $this->uuidValidator)),
+                $this->domainEventFactory->getDomainEvent($domainEventEntityArray),
+            );
         }
+
+        return new DomainEventEntityList($domainEventEntities);
     }
 }

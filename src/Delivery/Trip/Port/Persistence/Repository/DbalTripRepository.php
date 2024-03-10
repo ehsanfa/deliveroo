@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Delivery\Trip\Repository;
+namespace App\Delivery\Trip\Port\Persistence\Repository;
 
-use App\Delivery\Driver\Driver;
+use App\Delivery\Driver;
 use App\Delivery\Trip\Id;
 use App\Delivery\Trip\PersistingTripRepository;
 use App\Delivery\Trip\ReadOnlyTripRepository;
+use App\Delivery\Trip\Status;
 use App\Delivery\Trip\Trip;
 use App\Delivery\Trip\TripList;
 use App\Shared\Type\DomainEventWithPayload;
+use App\Shared\Type\Location;
+use App\Shared\Type\Uuid;
 use App\Shared\Type\UuidGenerator;
 use App\Shared\Type\UuidValidator;
 use Doctrine\DBAL\Connection;
@@ -40,7 +43,7 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
                 'ST_Latitude(destination) as destination_latitude',
                 'ST_Longitude(destination) as destination_longitude',
             )
-            ->where('t.id', ':id');
+            ->where('t.id = :id');
         $qb->setParameter('id', $id->toString());
         $res = $qb->fetchAssociative();
 
@@ -48,9 +51,34 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
             return null;
         }
 
-        return Trip::fromArray($res, $this->uuidValidator);
+        $id = new Id(Uuid::fromString($res['id'], $this->uuidValidator));
+        $status = Status::from($res['status']);
+        $source = new Location(
+            latitude: $res['source_latitude'],
+            longitude: $res['source_longitude'],
+        );
+        $destination = new Location(
+            latitude: $res['destination_latitude'],
+            longitude: $res['destination_longitude'],
+        );
+
+        $driverId = null;
+        if (null !== $res['driver_id']) {
+            $driverId = new Driver\Id(Uuid::fromString($res['driver_id'], $this->uuidValidator));
+        }
+
+        return Trip::fromData(
+            $id,
+            $status,
+            $source,
+            $destination,
+            $driverId,
+        );
     }
 
+    /**
+     * @throws Exception
+     */
     public function create(Trip $trip): void
     {
         if (!$trip->isFresh()) {
@@ -73,7 +101,16 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
         $q->bindValue("source_lng", $trip->getSource()->getLongitude());
         $q->bindValue("destination_lat", $trip->getDestination()->getLatitude());
         $q->bindValue("destination_lng", $trip->getDestination()->getLongitude());
-        $q->executeQuery();
+
+        $this->connection->beginTransaction();
+        try {
+            $q->executeQuery();
+            $this->persistDomainEvents($trip);
+            $this->connection->commit();
+        } catch (\Exception $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
 
     }
 
@@ -106,25 +143,30 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
                 ],
             );
 
-            foreach ($trip->getDomainEvents() as $domainEvent) {
-                $payload = null;
-                if ($domainEvent instanceof DomainEventWithPayload) {
-                    $payload = $domainEvent->getPayload();
-                }
-                $this->connection->insert($this->eventStoreTableName, [
-                    'id' => $this->uuidGenerator->generate()->toString(),
-                    'trip_id' => $domainEvent->getAggregateRootId()->toString(),
-                    'event' => $domainEvent::getIdentifier(),
-                    'payload' => $payload !== null ? json_encode($payload) : null,
-                ]);
-            }
-            $trip->flushDomainEvents();
+            $this->persistDomainEvents($trip);
 
             $this->connection->commit();
         } catch (\Exception $e) {
             $this->connection->rollBack();
             throw $e;
         }
+    }
+
+    private function persistDomainEvents(Trip $trip): void
+    {
+        foreach ($trip->getDomainEvents() as $domainEvent) {
+            $payload = null;
+            if ($domainEvent instanceof DomainEventWithPayload) {
+                $payload = $domainEvent->getPayload();
+            }
+            $this->connection->insert($this->eventStoreTableName, [
+                'id' => $this->uuidGenerator->generate()->toString(),
+                'trip_id' => $domainEvent->getAggregateRootId()->toString(),
+                'event' => $domainEvent::getIdentifier(),
+                'payload' => $payload !== null ? json_encode($payload) : null,
+            ]);
+        }
+        $trip->flushDomainEvents();
     }
 
     #[\Override] public function delete(Trip $trip): void
@@ -137,8 +179,13 @@ final readonly class DbalTripRepository implements PersistingTripRepository, Rea
         // TODO: Implement getOpenTrips() method.
     }
 
-    #[\Override] public function driverHasDoneMoreTripsThan(Driver $driver, int $trips): bool
+    #[\Override] public function driverHasDoneMoreTripsThan(Driver\Id $driverId, int $trips): bool
     {
         return false;
+    }
+
+    public function nextIdentity(): Id
+    {
+        return new Id($this->uuidGenerator->generate());
     }
 }

@@ -29,6 +29,7 @@ class Driver implements AggregateRoot
     private float $score = 1;
     private ?Location $location = null;
     private ?\DateTimeImmutable $lastLocationUpdateAt = null;
+    private ?Trip\Id $associatedTrip = null;
 
     private function __construct(
         private readonly Id $id,
@@ -129,6 +130,16 @@ class Driver implements AggregateRoot
         );
     }
 
+    public function unreserveFor(Trip\Id $tripId): void
+    {
+        if (!$this->isReserved()) {
+            throw new DriverNotReserved();
+        }
+
+        $this->associatedTrip = $tripId;
+        $this->changeStatusTo(Status::Free);
+    }
+
     /**
      * @throws DriverNotFreeException
      */
@@ -138,6 +149,7 @@ class Driver implements AggregateRoot
             throw new DriverNotFreeException();
         }
 
+        $this->associatedTrip = $tripId;
         $this->changeStatusTo(Status::Reserved);
         $this->addDomainEvent(
             new DriverReserved(
@@ -156,6 +168,7 @@ class Driver implements AggregateRoot
             throw new DriverNotReserved();
         }
 
+        $this->associatedTrip = $tripId;
         $this->changeStatusTo(Status::Busy);
         $this->addDomainEvent(
             new DriverAssigned(
@@ -178,7 +191,7 @@ class Driver implements AggregateRoot
     public function isRookie(ReadOnlyTripRepository $tripRepository): bool
     {
         $hasDoneMoreThanFiveTrips = $tripRepository->driverHasDoneMoreTripsThan(
-            driver: $this,
+            driverId: $this->getId(),
             trips: 5
         );
         return !$hasDoneMoreThanFiveTrips;
@@ -242,5 +255,10 @@ class Driver implements AggregateRoot
         }
 
         return $driver;
+    }
+
+    public function associatedTrip(): ?Trip\Id
+    {
+        return $this->associatedTrip;
     }
 }

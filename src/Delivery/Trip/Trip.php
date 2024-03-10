@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Delivery\Trip;
 
 use App\Delivery\Driver;
-use App\Delivery\Shared\Exception\HydrationException;
 use App\Delivery\Trip\Event\TripDelivered;
 use App\Delivery\Trip\Event\TripMarkedAsInProgress;
 use App\Delivery\Trip\Event\TripCreated;
@@ -17,10 +16,7 @@ use App\Shared\Type\Arrayable;
 use App\Shared\Type\Changeable;
 use App\Shared\Type\Changeset;
 use App\Shared\Type\DomainEvents;
-use App\Shared\Type\InvalidUuidException;
 use App\Shared\Type\Location;
-use App\Shared\Type\Uuid;
-use App\Shared\Type\UuidValidator;
 
 class Trip implements AggregateRoot, Arrayable
 {
@@ -133,12 +129,6 @@ class Trip implements AggregateRoot, Arrayable
         $oldDriverId = $this->driverId;
         $this->driverId = $driverId;
         $this->isDirty = true;
-        $this->addDomainEvent(
-            new TripMarkedAsInProgress(
-                tripId: $this->getId(),
-                driverId: $driverId,
-            ),
-        );
         $this->appendChangeset(
             new Changeset(
                 field: 'driver_id',
@@ -159,6 +149,12 @@ class Trip implements AggregateRoot, Arrayable
 
         $this->setDriverId($driverId);
         $this->changeStatusTo(Status::InProgress);
+        $this->addDomainEvent(
+            new TripMarkedAsInProgress(
+                tripId: $this->getId(),
+                driverId: $driverId,
+            ),
+        );
     }
 
     private function changeStatusTo(Status $status): void
@@ -174,63 +170,24 @@ class Trip implements AggregateRoot, Arrayable
         );
     }
 
-    /**
-     * @throws HydrationException
-     * @throws InvalidUuidException
-     */
-    public static function fromArray(
-        array $data,
-        UuidValidator $uuidValidator
-    ): Trip {
-        self::validateHydration($data);
-        $uuid = Uuid::fromString(
-            string: $data["id"],
-            validator: $uuidValidator
-        );
-        $id = new Id($uuid);
-        $status = Status::from($data["status"]);
-        $driverId = $data['driver_id'] !== null ? new Driver\Id(Uuid::fromString(
-            string: $data['driver_id'],
-            validator: $uuidValidator,
-        )) : null;
-        $source = new Location(
-            latitude: $data["source_latitude"],
-            longitude: $data["source_longitude"],
-        );
-        $destination = new Location(
-            latitude: $data["destination_latitude"],
-            longitude: $data["destination_longitude"],
-        );
-
+    public static function fromData(
+        Id $id,
+        Status $status,
+        Location $source,
+        Location $destination,
+        Driver\Id $driverId = null,
+    ): self {
         $trip = new self(
             $id,
             $status,
             $source,
             $destination,
         );
-        if (null !== $driverId) {
-            $trip->setDriverId($driverId);
-        }
-        return $trip;
-    }
 
-    /**
-     * @throws HydrationException
-     */
-    private static function validateHydration(array $data): void
-    {
-        $fields = [
-            "id",
-            "status",
-            "source_latitude",
-            "source_longitude",
-            "destination_latitude",
-            "destination_longitude",
-        ];
-        foreach ($fields as $field) {
-            if (!isset($data[$field])) {
-                throw new HydrationException($field);
-            }
+        if ($driverId) {
+            $trip->driverId = $driverId;
         }
+
+        return $trip;
     }
 }

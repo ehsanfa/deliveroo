@@ -13,4 +13,6 @@ interface PersistingTripRepository
     public function update(Trip $trip): void;
 
     public function delete(Trip $trip): void;
+
+    public function nextIdentity(): Id;
 }

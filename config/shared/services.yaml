@@ -12,7 +12,11 @@ services:
 
     App\Shared\Type\UuidValidator:
         class: App\Shared\Type\RamseyUuidValidator
+    uuid.validator:
+        alias: App\Shared\Type\UuidValidator
 
     App\Shared\Type\UuidGenerator:
         class: App\Shared\Type\RamseyUuidGenerator
         public: true
+    uuid.generator:
+        alias: App\Shared\Type\UuidGenerator

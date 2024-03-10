@@ -1,31 +1,51 @@
 services:
-  # default configuration for services in *this* file
-  _defaults:
-    autowire: true      # Automatically injects dependencies in your services.
-    autoconfigure: true
+  delivery.driver.event.factory:
+    class: App\Delivery\Driver\Event\EventFactory
+    arguments:
+      $uuidValidator: '@uuid.validator'
 
-  App\Delivery\Driver\Event\UuidIdentifierDriverEventFactory: ~
-  App\Delivery\Driver\DriverEventFactory: '@App\Delivery\Driver\Event\UuidIdentifierDriverEventFactory'
+  delivery.trip.event.factory:
+    class: App\Delivery\Trip\Event\EventFactory
+    arguments:
+      $uuidValidator: '@uuid.validator'
+
 
   App\Delivery\Trip\Event\UuidIdentifierDriverEventFactory: ~
   App\Delivery\Trip\DriverEventFactory: '@App\Delivery\Trip\Event\UuidIdentifierDriverEventFactory'
 
   App\Delivery\Driver\Event\Handler\UpdateTripWhenDriverReserved: ~
 
-  App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripInProgress:
+  App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripIsMarkedAsAssigned:
     arguments:
       $driverCommandBus: '@delivery.driver.command.bus'
+
+  App\Delivery\Trip\Event\Handler\MarkTripAsAssignedWhenDriverReserved:
+    arguments:
+      $tripCommandBus: '@delivery.trip.command.bus'
 
   App\Delivery\Driver\Event\Handler\MarkDriverAsFreeWhenTripDelivered:
     arguments:
       $tripQueryBus: '@delivery.trip.query.bus'
       $driverCommandBus: '@delivery.driver.command.bus'
 
+  App\Delivery\Driver\Event\Handler\UnreserveDriversWhenTripIsMarkedAsAssigned:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+
+  App\Delivery\Driver\Event\Handler\ScoutDriversWhenTripCreated:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+      $scorer: '@delivery.scout.scorer.overall'
+
+  delivery.event.handler.noop:
+    class: App\Delivery\Shared\EventHandler\NoopEventHandler
+
   delivery.driver.event.dispatcher:
     class: App\Delivery\Shared\EventHandler\EventDispatcherImplementation
     public: true
     arguments:
       $handlers:
+        App\Delivery\Driver\Event\Created: '@delivery.event.handler.noop'
         App\Delivery\Driver\Event\DriverReserved:
           - '@App\Delivery\Trip\Event\Handler\MarkTripAsAssignedWhenDriverReserved'
 
@@ -34,7 +54,10 @@ services:
     public: true
     arguments:
       $handlers:
+        App\Delivery\Trip\Event\TripCreated:
+          - '@App\Delivery\Driver\Event\Handler\ScoutDriversWhenTripCreated'
         App\Delivery\Trip\Event\TripMarkedAsInProgress:
-          - '@App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripInProgress'
+          - '@App\Delivery\Driver\Event\Handler\MarkDriverAsBusyWhenTripIsMarkedAsAssigned'
+          - '@App\Delivery\Driver\Event\Handler\UnreserveDriversWhenTripIsMarkedAsAssigned'
         App\Delivery\Trip\Event\TripDelivered:
           - '@App\Delivery\Driver\Event\Handler\MarkDriverAsFreeWhenTripDelivered'

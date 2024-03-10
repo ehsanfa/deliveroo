@@ -14,6 +14,7 @@
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
         <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+        <env name="DELIVERY_DATABASE_URL" force="true" value="mysql://test:test@mysql:3306/deliveroo_test?serverVersion=8.0.32&amp;charset=utf8mb4"/>
     </php>
 
     <testsuites>

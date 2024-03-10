@@ -16,10 +16,7 @@ interface EventStoreRepository
      */
     public function getEventById(DomainEventId $id): DomainEvent;
 
-    /**
-     * @implements \Traversable<DomainEventId>
-     */
-    public function getOldestEventIds(int $limit): \Traversable;
+    public function getOldestEvents(int $limit): DomainEventEntityList;
 
     /**
      * @param DomainEventId[] $ids

@@ -6,12 +6,16 @@ namespace Test\Unit\Delivery\Driver;
 
 use App\Delivery\Driver;
 use App\Delivery\Driver\Event\DriverAssigned;
-use App\Delivery\Driver\Event\DriverCreated;
+use App\Delivery\Driver\Event\DriverReserved;
+use App\Delivery\Shared\DomainEventEntity;
+use App\Delivery\Shared\DomainEventEntityList;
+use App\Delivery\Shared\DomainEventId;
 use App\Delivery\Shared\EventStoreRepository;
 use App\Delivery\Trip;
 use App\Delivery\Shared\EventHandler\EventDispatcherImplementation;
+use App\Delivery\Trip\Event\Handler\MarkTripAsAssignedWhenDriverReserved;
 use App\Delivery\Trip\PersistingTripRepository;
-use App\Shared\Type\DomainEventList;
+use App\Shared\Type\CommandBus;
 use App\Shared\Type\Location;
 use PHPUnit\Framework\TestCase;
 
@@ -34,21 +38,25 @@ class EventSubscriberTest extends TestCase
 
         $eventStoreRepository = $this->createStub(EventStoreRepository::class);
         $eventStoreRepository->method('getEventsByIdentifier')
-            ->willReturn(new DomainEventList([
-                $domainEvent,
+            ->willReturn(new DomainEventEntityList([
+                new DomainEventEntity(
+                    id: new DomainEventId(MockUuid::fromString('event-id')),
+                    domainEvent: $domainEvent,
+                )
             ]));
 
         $tripRepository = $this->createStub(PersistingTripRepository::class);
         $tripRepository->method('find')
             ->willReturn($trip);
 
-        $updateTripWhenDriverAssignedHandler = new UpdateTripWhenDriverReserved(
-            tripRepository: $tripRepository,
+        $tripCommandBus = $this->createStub(CommandBus::class);
+        $updateTripWhenDriverAssignedHandler = new MarkTripAsAssignedWhenDriverReserved(
+            $tripCommandBus,
         );
 
         $eventDispatcher = new EventDispatcherImplementation(
             [
-                DriverCreated::class => [
+                DriverReserved::class => [
                     $updateTripWhenDriverAssignedHandler,
                 ]
             ]

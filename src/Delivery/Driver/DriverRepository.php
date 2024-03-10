@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Delivery\Driver;
 
 use App\Delivery\Driver\Exception\DriverNotFoundException;
-use App\Delivery\Driver\DriverList;
+use App\Delivery\Trip;
 use App\Shared\Distance\Distance;
 use App\Shared\Type\Location;
 
@@ -29,4 +29,8 @@ interface DriverRepository
         Distance $distance,
         \DateTimeImmutable $lastActivityUntil,
     ): DriverList;
+
+    public function getReservedDriversForTrip(Trip\Id $tripId): DriverList;
+
+    public function nextIdentity(): Id;
 }

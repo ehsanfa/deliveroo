@@ -8,9 +8,10 @@ use App\Delivery\Driver;
 use App\Delivery\Trip;
 use App\Shared\Type\ClassNameAsIdentifier;
 use App\Shared\Type\DomainEvent;
+use App\Shared\Type\DomainEventWithPayload;
 use App\Shared\Type\Id;
 
-readonly class TripMarkedAsInProgress implements DomainEvent
+readonly class TripMarkedAsInProgress implements DomainEvent, DomainEventWithPayload
 {
     use ClassNameAsIdentifier;
 
@@ -26,13 +27,20 @@ readonly class TripMarkedAsInProgress implements DomainEvent
         return $this->tripId;
     }
 
-    public function getTripId(): Trip\Id
+    public function tripId(): Trip\Id
     {
         return $this->tripId;
     }
 
-    public function getDriverId(): Driver\Id
+    public function driverId(): Driver\Id
     {
         return $this->driverId;
+    }
+
+    public function getPayload(): array
+    {
+        return [
+            'driver_id' => $this->driverId()->toString(),
+        ];
     }
 }

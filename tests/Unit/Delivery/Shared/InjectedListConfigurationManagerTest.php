@@ -13,8 +13,6 @@ class InjectedListConfigurationManagerTest extends KernelTestCase
 {
     public function testGetConfigScout(): void
     {
-        /** @var InjectedListConfigurationManager $configManager */
-        $configManager = $this->getContainer()->get(InjectedListConfigurationManager::class);
         $configManager = new InjectedListConfigurationManager(
             configs: [
                 'scout' => [

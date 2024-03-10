@@ -7,10 +7,13 @@ namespace App\Delivery\Driver\Port\Persistence\Repository;
 use App\Delivery\Driver\Driver;
 use App\Delivery\Driver\DriverRepository;
 use App\Delivery\Driver\Exception\DriverNotFoundException;
+use App\Delivery\Driver\Exception\EmptyAssociatedTrip;
 use App\Delivery\Driver\Id;
 use App\Delivery\Driver\Status;
 use App\Delivery\Driver\DriverList;
+use App\Delivery\Trip;
 use App\Shared\Distance\Distance;
+use App\Shared\Type\Changeset;
 use App\Shared\Type\DomainEventWithPayload;
 use App\Shared\Type\InvalidUuidException;
 use App\Shared\Type\Location;
@@ -30,6 +33,7 @@ final readonly class DbalDriverRepository implements DriverRepository
     public function __construct(
         private string $tableName,
         private string $eventStoreTableName,
+        private string $driverReservationTableName,
         private Connection $connection,
         private UuidValidator $uuidValidator,
         private UuidGenerator $uuidGenerator,
@@ -64,7 +68,7 @@ final readonly class DbalDriverRepository implements DriverRepository
                 'ST_Longitude(d.location) as location_longitude',
                 'd.location_updated_at'
             )
-            ->where('d.id', ':id');
+            ->where('d.id = :id');
         $qb->setParameter('id', $driverId->toString());
         $res = $qb->fetchAssociative();
 
@@ -180,8 +184,10 @@ final readonly class DbalDriverRepository implements DriverRepository
             if (isset($changes['location'])) {
                 $location = json_decode($changes['location'], associative: true);
                 unset($changes['location']);
-                $this->updateDriverLocation($location);
+                $this->updateDriverLocation($driver->getId(), $location);
             }
+
+            $this->handleDriverReservation($driver);
 
             if ($changes) {
                 $this->connection->update(
@@ -203,19 +209,99 @@ final readonly class DbalDriverRepository implements DriverRepository
     }
 
     /**
+     * @param Driver $driver
+     * @throws EmptyAssociatedTrip
+     * @throws Exception
+     */
+    private function handleDriverReservation(Driver $driver): void
+    {
+        $addDriverReservation = false;
+        $deleteDriverReservation = false;
+
+        foreach ($driver->getChangesets() as $change) {
+            if ($change->getField() === 'status') {
+                if (Status::tryFrom($change->getNew()) === Status::Reserved) {
+                    $addDriverReservation = true;
+                } elseif (Status::tryFrom($change->getOld()) === Status::Reserved) {
+                    $deleteDriverReservation = true;
+                }
+            }
+        }
+
+        if ($addDriverReservation) {
+            $this->addDriverReservation($driver);
+        }
+
+        if ($deleteDriverReservation) {
+            $this->deleteDriverReservation($driver);
+        }
+    }
+
+    /**
+     * @throws EmptyAssociatedTrip
+     * @throws Exception
+     */
+    private function addDriverReservation(Driver $driver): void
+    {
+        if (null === $driver->associatedTrip()) {
+            throw new EmptyAssociatedTrip();
+        }
+        $this->connection->insert(
+            table: $this->driverReservationTableName,
+            data: [
+                'driver_id' => $driver->getId()->toString(),
+                'trip_id' => $driver->associatedTrip()->toString(),
+            ]
+        );
+    }
+
+    private function deleteDriverReservation(Driver $driver): void
+    {
+        if (null === $driver->associatedTrip()) {
+            $this->deleteAllDriverReservations($driver);
+            return;
+        }
+
+        $this->deleteDriverReservationForTrip($driver);
+    }
+
+    private function deleteAllDriverReservations(Driver $driver): void
+    {
+        $this->connection->delete(
+            table: $this->driverReservationTableName,
+            criteria: [
+                'driver_id' => $driver->getId()->toString(),
+            ],
+        );
+    }
+
+    private function deleteDriverReservationForTrip(Driver $driver): void
+    {
+        $this->connection->delete(
+            table: $this->driverReservationTableName,
+            criteria: [
+                'driver_id' => $driver->getId()->toString(),
+                'trip_id' => $driver->associatedTrip()->toString(),
+            ],
+        );
+    }
+
+    /**
      * @param <string, float>[] $location
      * @throws Exception
      */
-    private function updateDriverLocation(array $location): void
+    private function updateDriverLocation(Id $driverId, array $location): void
     {
         $q = $this->connection->prepare("
                 UPDATE {$this->tableName}
                 SET location = ST_SRID(POINT(:location_lng, :location_lat), 4326),
                 location_updated_at = :location_updated_at
+                WHERE id = :driver_id
             ");
         $q->bindValue("location_lat", $location['latitude']);
         $q->bindValue("location_lng", $location['longitude']);
         $q->bindValue("location_updated_at", date('Y-m-d H:i:s'));
+        $q->bindValue('driver_id', $driverId->toString());
         $q->executeQuery();
     }
 
@@ -302,5 +388,31 @@ final readonly class DbalDriverRepository implements DriverRepository
         }
 
         return new DriverList($drivers);
+    }
+
+    /**
+     * @throws Exception
+     * @throws InvalidUuidException
+     */
+    public function getReservedDriversForTrip(Trip\Id $tripId): DriverList
+    {
+        $qb = $this->connection->createQueryBuilder();
+        $qb->from($this->driverReservationTableName)
+            ->select('driver_id')
+            ->where('trip_id = :trip_id')
+            ->setParameter('trip_id', $tripId->toString());
+
+        $driversList = [];
+        foreach ($qb->fetchAllAssociative() as $reservedDriver) {
+            $driverId = new Id(Uuid::fromString($reservedDriver['driver_id'], $this->uuidValidator));
+            $driversList[] = $this->find($driverId);
+        }
+
+        return new DriverList($driversList);
+    }
+
+    public function nextIdentity(): Id
+    {
+        return new Id($this->uuidGenerator->generate());
     }
 }

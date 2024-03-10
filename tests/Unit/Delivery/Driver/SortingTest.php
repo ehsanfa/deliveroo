@@ -115,8 +115,8 @@ class SortingTest extends TestCase
 
         $tripRateRepositoryMock = $this->createStub(ReadOnlyTripRepository::class);
         $tripRateRepositoryMock->method('driverHasDoneMoreTripsThan')
-            ->willReturnCallback(function(Driver $driver) {
-                return match ($driver->getId()->toString()) {
+            ->willReturnCallback(function(Id $driverId) {
+                return match ($driverId->toString()) {
                     'A', 'C' => true,
                     'B' => false,
                     default => throw new \Exception('Unexpected match value')
@@ -170,8 +170,8 @@ class SortingTest extends TestCase
 
         $tripRateRepositoryMock = $this->createStub(ReadOnlyTripRepository::class);
         $tripRateRepositoryMock->method('driverHasDoneMoreTripsThan')
-            ->willReturnCallback(function(Driver $driver) {
-                return match ($driver->getId()->toString()) {
+            ->willReturnCallback(function(Id $driverId) {
+                return match ($driverId->toString()) {
                     'A', 'C' => true,
                     'B' => false,
                     default => throw new \Exception('Unexpected match value')

@@ -1,30 +1,51 @@
 services:
-    _defaults:
-      autowire: true
-
     App\Delivery\Driver\Port\Persistence\Repository\DbalDriverRepository:
       public: true
       arguments:
         $tableName: 'delivery_drivers'
         $eventStoreTableName: 'delivery_driver_event_store'
+        $driverReservationTableName: 'delivery_driver_reservation'
         $connection: '@doctrine.dbal.delivery_connection'
+        $uuidValidator: '@uuid.validator'
+        $uuidGenerator: '@uuid.generator'
     App\Delivery\Driver\DriverRepository: '@App\Delivery\Driver\Port\Persistence\Repository\DbalDriverRepository'
+    delivery.driver.repository:
+      alias: App\Delivery\Driver\DriverRepository
 
-    App\Delivery\Trip\Repository\DbalTripRepository:
+    App\Delivery\Trip\Port\Persistence\Repository\DbalTripRepository:
       public: true
       arguments:
         $tableName: 'delivery_trips'
         $eventStoreTableName: 'delivery_trip_event_store'
         $connection: '@doctrine.dbal.delivery_connection'
+        $uuidValidator: '@uuid.validator'
+        $uuidGenerator: '@uuid.generator'
 
-    App\Delivery\Trip\PersistingTripRepository: '@App\Delivery\Trip\Repository\DbalTripRepository'
-    App\Delivery\Trip\ReadOnlyTripRepository: '@App\Delivery\Trip\Repository\DbalTripRepository'
+    App\Delivery\Trip\PersistingTripRepository: '@App\Delivery\Trip\Port\Persistence\Repository\DbalTripRepository'
+    delivery.trip.repository:
+      alias: App\Delivery\Trip\PersistingTripRepository
+    App\Delivery\Trip\ReadOnlyTripRepository: '@App\Delivery\Trip\Port\Persistence\Repository\DbalTripRepository'
+    delivery.trip.repository.read_only:
+      alias: App\Delivery\Trip\ReadOnlyTripRepository
 
     App\Delivery\DriverRate\DriverRateRepository: '@App\Delivery\DriverRate\Repository\MockDriverRateRepository'
+    delivery.driver_rate.repository:
+      alias: App\Delivery\DriverRate\DriverRateRepository
 
     delivery.driver.repository.event_store:
-      class: App\Delivery\Driver\Port\Persistence\Repository\DbalDriverEventStoreRepository
+      class: App\Delivery\Shared\Port\Persistence\Repository\DbalEventStoreRepository
       public: true
       arguments:
         $tableName: 'delivery_driver_event_store'
         $connection: '@doctrine.dbal.delivery_connection'
+        $domainEventFactory: '@delivery.driver.event.factory'
+        $uuidValidator: '@uuid.validator'
+
+    delivery.trip.repository.event_store:
+      class: App\Delivery\Shared\Port\Persistence\Repository\DbalEventStoreRepository
+      public: true
+      arguments:
+        $tableName: 'delivery_trip_event_store'
+        $connection: '@doctrine.dbal.delivery_connection'
+        $domainEventFactory: '@delivery.trip.event.factory'
+        $uuidValidator: '@uuid.validator'

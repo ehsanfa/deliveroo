@@ -9,13 +9,19 @@ use App\Shared\Type\Command;
 
 final readonly class CreateDriverCommand implements Command
 {
+    private ?Id $id;
+
     public function __construct(
-        private Id $id,
     ) {
     }
 
     public function getId(): Id
     {
         return $this->id;
+    }
+
+    public function setId(Id $id): void
+    {
+        $this->id = $id;
     }
 }

@@ -1,8 +1,11 @@
 services:
-  # default configuration for services in *this* file
-  _defaults:
-    autowire: true      # Automatically injects dependencies in your services.
-    autoconfigure: true
+
+  App\Delivery\Driver\Query\GetDriverHandler:
+    arguments:
+      $driverRepository: '@delivery.driver.repository'
+  App\Delivery\Driver\Query\GetFreeDriversAroundHandler:
+    arguments:
+     $driverRepository: '@delivery.driver.repository'
 
   delivery.driver.query.bus:
     class: App\Delivery\Shared\Bus\QueryBus
@@ -11,6 +14,10 @@ services:
       $handlers:
         App\Delivery\Driver\Query\GetDriverQuery: '@App\Delivery\Driver\Query\GetDriverHandler'
         App\Delivery\Driver\Query\GetFreeDriversAroundQuery: '@App\Delivery\Driver\Query\GetFreeDriversAroundHandler'
+
+  App\Delivery\Trip\Query\GetTripHandler:
+    arguments:
+     $tripRepository: '@delivery.trip.repository'
 
   delivery.trip.query.bus:
     class: App\Delivery\Shared\Bus\QueryBus
@@ -22,13 +29,37 @@ services:
   App\Delivery\Driver\Command\MarkDriverFreeHandler:
     arguments:
       $driverQueryBus: '@delivery.driver.query.bus'
+      $driverRepository: '@delivery.driver.repository'
   App\Delivery\Driver\Command\MarkDriverBusyHandler:
     arguments:
       $driverQueryBus: '@delivery.driver.query.bus'
+      $driverRepository: '@delivery.driver.repository'
   App\Delivery\Driver\Command\ScoutDriverHandler:
     arguments:
+      $driverRepository: '@delivery.driver.repository'
+      $configurationManager: '@delivery.configuration.manager'
       $driverQueryBus: '@delivery.driver.query.bus'
       $tripQueryBus: '@delivery.trip.query.bus'
+  App\Delivery\Trip\Command\CreateTripHandler:
+    arguments:
+      $persistingTripRepository: '@App\Delivery\Trip\PersistingTripRepository'
+  App\Delivery\Trip\Command\RecruitDriverHandler:
+    arguments:
+      $driverRepository: '@delivery.driver.repository'
+      $tripRepository: '@delivery.trip.repository'
+  App\Delivery\Driver\Command\CreateDriverHandler:
+    arguments:
+      $driverRepository: '@delivery.driver.repository'
+  App\Delivery\Driver\Command\UpdateDriverLocationHandler:
+    arguments:
+      $driverRepository: '@delivery.driver.repository'
+  App\Delivery\Driver\Command\UnreserveDriversHandler:
+    arguments:
+      $driverRepository: '@delivery.driver.repository'
+  App\Delivery\Trip\Command\MarkTripAsDeliveredHandler:
+    arguments:
+      $tripQueryBus: '@delivery.trip.query.bus'
+      $tripRepository: '@delivery.trip.repository'
 
   delivery.driver.command.bus:
     class: App\Delivery\Shared\Bus\CommandBus
@@ -40,6 +71,7 @@ services:
         App\Delivery\Driver\Command\MarkDriverBusyCommand: '@App\Delivery\Driver\Command\MarkDriverBusyHandler'
         App\Delivery\Driver\Command\MarkDriverFreeCommand: '@App\Delivery\Driver\Command\MarkDriverFreeHandler'
         App\Delivery\Driver\Command\UpdateDriverLocationCommand: '@App\Delivery\Driver\Command\UpdateDriverLocationHandler'
+        App\Delivery\Driver\Command\UnreserveDriversCommand: '@App\Delivery\Driver\Command\UnreserveDriversHandler'
 
   delivery.trip.command.bus:
     class: App\Delivery\Shared\Bus\CommandBus
@@ -47,3 +79,5 @@ services:
     arguments:
       $handlers:
         App\Delivery\Trip\Command\CreateTripCommand: '@App\Delivery\Trip\Command\CreateTripHandler'
+        App\Delivery\Trip\Command\RecruitDriverCommand: '@App\Delivery\Trip\Command\RecruitDriverHandler'
+        App\Delivery\Trip\Command\MarkTripAsDeliveredCommand: '@App\Delivery\Trip\Command\MarkTripAsDeliveredHandler'

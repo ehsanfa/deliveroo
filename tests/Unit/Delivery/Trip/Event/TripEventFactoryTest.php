@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Test\Unit\Delivery\Trip\Event;
 
+use App\Delivery\Trip\Event\EventFactory;
 use App\Delivery\Trip\Event\TripCreated;
 use App\Delivery\Trip\Event\TripDelivered;
 use App\Delivery\Trip\Event\TripMarkedAsInProgress;
-use App\Delivery\Trip\Event\UuidIdentifierTripEventFactory;
 use App\Shared\Type\UuidValidator;
 use PHPUnit\Framework\TestCase;
 
@@ -21,10 +21,11 @@ class TripEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierTripEventFactory($uuidValidator);
-        $tripCreatedEvent = $factory->createTripCreatedEvent(
-            tripId: $tripId,
-        );
+        $factory = new EventFactory($uuidValidator);
+        $tripCreatedEvent = $factory->getDomainEvent([
+            'event' => TripCreated::class,
+            'trip_id' => $tripId,
+        ]);
 
         self::assertInstanceOf(
             expected: TripCreated::class,
@@ -40,10 +41,11 @@ class TripEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierTripEventFactory($uuidValidator);
-        $tripCreatedEvent = $factory->createTripDeliveredEvent(
-            tripId: $tripId,
-        );
+        $factory = new EventFactory($uuidValidator);
+        $tripCreatedEvent = $factory->getDomainEvent([
+            'event' => TripDelivered::class,
+            'trip_id' => $tripId,
+        ]);
 
         self::assertInstanceOf(
             expected: TripDelivered::class,
@@ -60,11 +62,14 @@ class TripEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierTripEventFactory($uuidValidator);
-        $tripCreatedEvent = $factory->createTripMarkedAsInProgressEvent(
-            tripId: $tripId,
-            driverId: $driverId,
-        );
+        $factory = new EventFactory($uuidValidator);
+        $tripCreatedEvent = $factory->getDomainEvent([
+            'event' => TripMarkedAsInProgress::class,
+            'trip_id' => $tripId,
+            'payload' => json_encode([
+                'driver_id' => $driverId,
+            ]),
+        ]);
 
         self::assertInstanceOf(
             expected: TripMarkedAsInProgress::class,

@@ -133,9 +133,6 @@ class DbalDriverEventStoreRepositoryTest extends TestWithCleanup
         );
         $this->driverCommandBus->handle($scoutDriverCommand);
 
-        $events = $this->driverEventStoreRepository
-            ->getOldestEventIds(10);
-
         self::assertEquals(
             expected: 1,
             actual: $this->driverEventStoreRepository->getEventsByIdentifier(Driver\Event\DriverCreated::class)->count(),

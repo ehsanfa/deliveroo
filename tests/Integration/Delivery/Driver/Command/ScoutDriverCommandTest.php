@@ -27,7 +27,6 @@ class ScoutDriverCommandTest extends TestWithCleanup
     private CommandBus $driverCommandBus;
     private CommandBus $tripCommandBus;
     private DriverRepository $driverRepository;
-    private QueryBus $driverQueryBus;
 
     protected function setUp(): void
     {
@@ -37,7 +36,6 @@ class ScoutDriverCommandTest extends TestWithCleanup
         $this->driverCommandBus = self::getContainer()->get('delivery.driver.command.bus');
         $this->tripCommandBus = self::getContainer()->get('delivery.trip.command.bus');
         $this->driverRepository = self::getContainer()->get(DriverRepository::class);
-        $this->driverQueryBus = self::getContainer()->get('delivery.driver.query.bus');
         parent::setUp();
     }
 
@@ -95,9 +93,15 @@ class ScoutDriverCommandTest extends TestWithCleanup
             scorer: $scorer,
         ));
 
+        $reservedDrivers = $this->driverRepository->getReservedDriversForTrip($tripId);
+
         self::assertEquals(
-            expected: $this->driverRepository->getStatusById($driverId),
-            actual: Driver\Status::Reserved,
+            expected: Driver\Status::Reserved,
+            actual: $this->driverRepository->getStatusById($driverId),
+        );
+
+        self::assertFalse(
+            $reservedDrivers->isEmpty()
         );
     }
 }

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Delivery\Trip\Event\Handler;
 
-use App\Delivery\Driver\Event\DriverAssigned;
 use App\Delivery\Driver\Event\DriverReserved;
+use App\Delivery\Trip\Command\RecruitDriverCommand;
 use App\Delivery\Trip\Exception\TripIsNotOpenException;
-use App\Delivery\Trip\PersistingTripRepository;
+use App\Shared\Type\CommandBus;
 
 final readonly class MarkTripAsAssignedWhenDriverReserved
 {
     public function __construct(
-        private PersistingTripRepository $tripRepository,
+        private CommandBus $tripCommandBus,
     ) {
     }
 
@@ -21,23 +21,6 @@ final readonly class MarkTripAsAssignedWhenDriverReserved
      */
     public function handle(DriverReserved $domainEvent): void
     {
-        $trip = $this->tripRepository->find(
-            id: $domainEvent->getTripId(),
-        );
-
-        if (null === $trip) {
-            return;
-        }
-
-        try {
-            $trip->markAsAssigned($domainEvent->getDriverId());
-        } catch (TripIsNotOpenException) {
-            return;
-        }
-
-        if (!$trip->isDirty()) {
-            return;
-        }
-        $this->tripRepository->update($trip);
+        $this->tripCommandBus->handle(new RecruitDriverCommand($domainEvent->getTripId()));
     }
 }

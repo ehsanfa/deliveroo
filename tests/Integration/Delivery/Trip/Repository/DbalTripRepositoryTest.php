@@ -12,14 +12,12 @@ use App\Shared\Type\Location;
 use App\Shared\Type\Uuid;
 use App\Shared\Type\UuidGenerator;
 use App\Shared\Type\UuidValidator;
-use Doctrine\DBAL\Connection;
 use Test\Integration\Shared\TestWithCleanup;
 
-class DbalTripRepository extends TestWithCleanup
+class DbalTripRepositoryTest extends TestWithCleanup
 {
     public function testCreateTrip(): void
     {
-        $uuidValidator = $this->getContainer()->get(UuidValidator::class);
         /** @var UuidGenerator $uuidGenerator */
         $uuidGenerator = $this->getContainer()->get(UuidGenerator::class);
         $tripId = new Id($uuidGenerator->generate());

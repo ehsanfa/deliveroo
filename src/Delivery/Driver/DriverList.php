@@ -48,6 +48,11 @@ readonly class DriverList implements \IteratorAggregate
         return new DriverList($driverListToSort);
     }
 
+    public function first(): ?Driver
+    {
+        return $this->drivers[0] ?? null;
+    }
+
     public function getIterator(): Traversable
     {
         return new \ArrayIterator($this->drivers);

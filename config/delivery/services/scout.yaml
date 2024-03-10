@@ -1,10 +1,19 @@
 services:
-  _defaults:
-    autowire: true
-    public: true
-
   delivery.scout.scorer.rookie:
     class: App\Delivery\Driver\Scorer\RookieScorer
+    arguments:
+      $tripRepository: '@delivery.trip.repository.read_only'
+      $configurationManager: '@delivery.configuration.manager'
 
   delivery.scout.scorer.rate:
     class: App\Delivery\Driver\Scorer\RateScorer
+    arguments:
+      $driverRateRepository: '@delivery.driver_rate.repository'
+      $configurationManager: '@delivery.configuration.manager'
+
+  delivery.scout.scorer.overall:
+    class: App\Delivery\Driver\Scorer\MultipleScorer
+    arguments:
+      $scorer:
+        - '@delivery.scout.scorer.rookie'
+        - '@delivery.scout.scorer.rate'

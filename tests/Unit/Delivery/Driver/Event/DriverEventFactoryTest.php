@@ -7,7 +7,7 @@ namespace Test\Unit\Delivery\Driver\Event;
 use App\Delivery\Driver\Event\DriverAssigned;
 use App\Delivery\Driver\Event\DriverCreated;
 use App\Delivery\Driver\Event\DriverReserved;
-use App\Delivery\Driver\Event\UuidIdentifierDriverEventFactory;
+use App\Delivery\Driver\Event\EventFactory;
 use App\Shared\Type\UuidValidator;
 use PHPUnit\Framework\TestCase;
 
@@ -22,25 +22,26 @@ class DriverEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierDriverEventFactory($uuidValidator);
-        $driverAssignedEvent = $factory->createDriverAssignedEvent(
-            driverId: $driverId,
-            payload: [
+        $factory = new EventFactory($uuidValidator);
+        $event = $factory->getDomainEvent([
+            'event' => DriverAssigned::class,
+            'driver_id' => $driverId,
+            'payload' => json_encode([
                 'trip_id' => $tripId,
-            ],
-        );
+            ]),
+        ]);
 
         self::assertInstanceOf(
             expected: DriverAssigned::class,
-            actual: $driverAssignedEvent,
+            actual: $event,
         );
         self::assertEquals(
             expected: $driverId,
-            actual: $driverAssignedEvent->getDriverId()->toString(),
+            actual: $event->getDriverId()->toString(),
         );
         self::assertEquals(
             expected: $tripId,
-            actual: $driverAssignedEvent->getTripId()->toString()
+            actual: $event->getTripId()->toString()
         );
     }
 
@@ -52,10 +53,11 @@ class DriverEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierDriverEventFactory($uuidValidator);
-        $driverCreatedEvent = $factory->createDriverCreatedEvent(
-            driverId: $driverId,
-        );
+        $factory = new EventFactory($uuidValidator);
+        $driverCreatedEvent = $factory->getDomainEvent([
+            'event' => DriverCreated::class,
+            'driver_id' => $driverId,
+        ]);
 
         self::assertInstanceOf(
             expected: DriverCreated::class,
@@ -76,13 +78,14 @@ class DriverEventFactoryTest extends TestCase
         $uuidValidator->method('isValid')
             ->willReturn(true);
 
-        $factory = new UuidIdentifierDriverEventFactory($uuidValidator);
-        $driverCreatedEvent = $factory->createDriverReservedEvent(
-            driverId: $driverId,
-            payload: [
+        $factory = new EventFactory($uuidValidator);
+        $driverCreatedEvent = $factory->getDomainEvent([
+            'event' => DriverReserved::class,
+            'driver_id' => $driverId,
+            'payload' => json_encode([
                 'trip_id' => $tripId,
-            ]
-        );
+            ]),
+        ]);
 
         self::assertInstanceOf(
             expected: DriverReserved::class,

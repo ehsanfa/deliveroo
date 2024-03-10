@@ -1,16 +1,11 @@
 services:
-  # default configuration for services in *this* file
-  _defaults:
-    autowire: true      # Automatically injects dependencies in your services.
-    autoconfigure: true
-
   delivery.configuration.injectedList:
     class: App\Delivery\Shared\Configuration\InjectedListConfigurationManager
     public: true
     arguments:
       $configs:
         scout:
-          maxDistanceValue: 5
+          maxDistanceValue: 500
           maxDistanceUnit: !php/enum App\Shared\Distance\Unit::Kilometer
           lastActivityUntil: '-10 minutes'
 
@@ -24,3 +19,6 @@ services:
       $fallbackConfigurationManager: '@delivery.configuration.default'
 
   App\Delivery\Shared\Configuration\ConfigurationManager: '@delivery.configuration.withFallback'
+
+  delivery.configuration.manager:
+    alias: App\Delivery\Shared\Configuration\ConfigurationManager

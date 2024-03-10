@@ -17,6 +17,8 @@ use Test\Integration\Shared\TestWithCleanup;
 
 class DriverReservedTest extends TestWithCleanup
 {
+    private const RESERVED_DRIVER_TABLE = 'delivery_driver_reservation';
+
     private EventDispatcher $eventDispatcher;
     private CommandBus $driverCommandBus;
     private CommandBus $tripCommandBus;
@@ -52,9 +54,18 @@ class DriverReservedTest extends TestWithCleanup
             tripId: $tripId,
         );
 
+        $this->connection->insert(
+            table: self::RESERVED_DRIVER_TABLE,
+            data: [
+                'driver_id' => $driverId->toString(),
+                'trip_id' => $tripId->toString(),
+            ]
+        );
+
         $this->eventDispatcher->dispatch($driverReserved);
 
         $trip = $this->tripRepository->find($tripId);
+
         self::assertEquals(
             expected: Trip\Status::InProgress,
             actual: $trip->getStatus(),

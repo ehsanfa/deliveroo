@@ -1,0 +1,49 @@
+services:
+  App\Delivery\Driver\Port\Cli\CreateDriver:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+      $uuidGenerator: '@uuid.generator'
+    tags: ['console.command']
+
+  App\Delivery\Driver\Port\Cli\UpdateLocation:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+      $uuidValidator: '@uuid.validator'
+    tags: ['console.command']
+
+  App\Delivery\Driver\Port\Cli\MarkAsFree:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+      $uuidValidator: '@uuid.validator'
+    tags: ['console.command']
+
+  App\Delivery\Trip\Port\Cli\CreateTrip:
+    arguments:
+      $tripCommandBus: '@delivery.trip.command.bus'
+      $uuidGenerator: '@uuid.generator'
+    tags: ['console.command']
+
+  App\Delivery\Driver\Port\Cli\ScoutDriver:
+    arguments:
+      $driverCommandBus: '@delivery.driver.command.bus'
+      $uuidValidator: '@uuid.validator'
+      $scorer: '@delivery.scout.scorer.overall'
+    tags: ['console.command']
+
+  App\Delivery\Driver\Port\Cli\EventHandler:
+    arguments:
+      $eventDispatcher: '@delivery.driver.event.dispatcher'
+      $eventStoreRepository: '@delivery.driver.repository.event_store'
+    tags: ['console.command']
+
+  App\Delivery\Trip\Port\Cli\EventHandler:
+    arguments:
+      $eventDispatcher: '@delivery.trip.event.dispatcher'
+      $eventStoreRepository: '@delivery.trip.repository.event_store'
+    tags: ['console.command']
+
+  App\Delivery\Trip\Port\Cli\TripDelivered:
+    arguments:
+      $tripCommandBus: '@delivery.trip.command.bus'
+      $uuidValidator: '@uuid.validator'
+    tags: [ 'console.command' ]

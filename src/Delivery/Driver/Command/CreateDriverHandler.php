@@ -11,16 +11,17 @@ use App\Delivery\Driver\Status;
 final readonly class CreateDriverHandler
 {
     public function __construct(
-        private DriverRepository $persistingDriverRepository,
+        private DriverRepository $driverRepository,
     ) {
     }
 
     public function __invoke(CreateDriverCommand $command): void
     {
+        $id = $command->getId() ?: $this->driverRepository->nextIdentity();
         $driver = Driver::create(
-            id: $command->getId(),
+            id: $id,
             status: Status::OnHold
         );
-        $this->persistingDriverRepository->create($driver);
+        $this->driverRepository->create($driver);
     }
 }

@@ -13,16 +13,17 @@ use App\Delivery\Shared\Configuration\ConfigurationManager;
 use App\Delivery\Shared\Exception\MissingConfigurationException;
 use App\Delivery\Shared\Exception\TripNotFoundException;
 use App\Delivery\Trip\Query\GetTripQuery;
+use App\Delivery\Trip\Trip;
 use App\Shared\Type\HandlerNotFoundException;
 use App\Shared\Type\QueryBus;
 
 final readonly class ScoutDriverHandler
 {
     public function __construct(
-        private DriverRepository $driverRepository,
-        private ConfigurationManager $configurationManager,
-        private QueryBus $driverQueryBus,
-        private QueryBus $tripQueryBus,
+        private DriverRepository         $driverRepository,
+        private ConfigurationManager     $configurationManager,
+        private QueryBus                 $driverQueryBus,
+        private QueryBus                 $tripQueryBus,
     ) {
     }
 
@@ -37,6 +38,7 @@ final readonly class ScoutDriverHandler
         $tripId = $scoutDriverCommand->getTripId();
         $scorer = $scoutDriverCommand->getScorer();
 
+        /** @var Trip $trip */
         $trip = $this->tripQueryBus->handle(new GetTripQuery($tripId));
 
         if (null === $trip) {
@@ -64,7 +66,7 @@ final readonly class ScoutDriverHandler
                 $this->driverRepository->update($driver);
                 return;
             } catch (DriverNotFreeException $e) {
-                continue;
+                throw $e;
             }
         }
 

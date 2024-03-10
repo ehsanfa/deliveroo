@@ -13,7 +13,7 @@ readonly class EventDispatcherImplementation implements EventDispatcher
     /**
      * @param array<string, DomainEventHandler[]> $handlers
      */
-    public function __construct(private array $handlers)
+    public function __construct(private array $handlers = [])
     {
     }
 
